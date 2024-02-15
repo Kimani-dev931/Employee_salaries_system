@@ -122,9 +122,9 @@ public class Databaseconnection {
 
 
 
+            rollover.rollover(connection);
+//            rollover.processEmployeePayments(connection);
 
-            rollover.processEmployeePayments(connection);
-//            rollover.rollover(connection);
 
 //            String currentLivePeriod = employee.fetchLivePeriod(connection);
 //            try {

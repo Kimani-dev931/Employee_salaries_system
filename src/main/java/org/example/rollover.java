@@ -242,9 +242,6 @@ public class rollover {
         }
     }
 
-
-
-
     private static boolean allowanceChecker(String startDate, String currentPeriod) {
 
         LocalDate start = LocalDate.parse(startDate);
@@ -257,7 +254,8 @@ public class rollover {
     private static double fetchCurrentSalary(Connection connection, int employeeId) throws SQLException {
         List<String> columns = Arrays.asList("earnings_amount");
         String whereClause = "employee_id = " + employeeId + " AND earning_type_id = 4";
-        JSONArray results = QueryManager.dynamicSelect(connection, "earnings", columns, whereClause, "", "", "", null, null, "MySQL", null);
+        String orderBy = "date_created DESC";
+        JSONArray results = QueryManager.dynamicSelect(connection, "earnings", columns, whereClause, null, orderBy, null, null, null, "MySQL", null);
 
         if (results.length() > 0) {
             JSONObject latestEarning = results.getJSONObject(0);
