@@ -97,7 +97,7 @@ public class rollover {
     public static void updateAllEmployeeStatuses(Connection connection, String livePeriod) throws SQLException {
         // Fetch all employees, including their current status
         List<String> columns = Arrays.asList("employee_id", "employee_start_date", "employee_termination_date", "employee_status");
-        JSONArray employees = employee.selectemployee(connection, "employee", columns, "", "", "", "", null, null, Arrays.asList(), "MySQL");
+        JSONArray employees = employee.selectemployee(connection, "employee", columns, null, null, null, null, null, null, Arrays.asList(), "MySQL");
 
         for (int i = 0; i < employees.length(); i++) {
             JSONObject emp = employees.getJSONObject(i);
@@ -180,13 +180,12 @@ public class rollover {
         // Check employee status and insert earnings and deductions accordingly
         if (status.equals("new")) {
             // Insert only salary as earnings
-
             Map<String, String> earningsFields = new HashMap<>();
             earningsFields.put("employee_id", String.valueOf(employeeId));
             earningsFields.put("earning_type_id", "4");
             earningsFields.put("earnings_amount", String.valueOf(newSalary));
             earnings.Insert_earnings("earnings", earningsFields, connection);
-        } else if ((status.equals("active") || status.equals("leaving")) && allowanceChecker(employee.has("employee_start_date") ? employee.optString("employee_start_date") : null, livePeriod)) {
+        } else if ((status.equals("active") || status.equals("leaving"))) {
 
             Map<String, String> earningsFields = new HashMap<>();
             earningsFields.put("employee_id", String.valueOf(employeeId));
@@ -195,27 +194,26 @@ public class rollover {
             earningsFields.put("earnings_amount", String.valueOf(newSalary));
             earnings.Insert_earnings("earnings", earningsFields, connection);
 
+            if (allowanceChecker(employee.has("employee_start_date") ? employee.optString("employee_start_date") : null, livePeriod)) {
+                earningsFields.put("employee_id", String.valueOf(employeeId));
+                earningsFields.put("earning_type_id", "1");
+                earningsFields.put("period_id", String.valueOf(periodId));
+                earningsFields.put("earnings_amount", String.valueOf(houseAllowance));
+                earnings.Insert_earnings("earnings", earningsFields, connection);
 
-            earningsFields.put("employee_id", String.valueOf(employeeId));
-            earningsFields.put("earning_type_id", "1");
-            earningsFields.put("period_id", String.valueOf(periodId));
-            earningsFields.put("earnings_amount", String.valueOf(houseAllowance));
-            earnings.Insert_earnings("earnings", earningsFields, connection);
+                earningsFields.put("employee_id", String.valueOf(employeeId));
+                earningsFields.put("earning_type_id", "2");
+                earningsFields.put("period_id", String.valueOf(periodId));
+                earningsFields.put("earnings_amount", String.valueOf(transportAllowance));
+                earnings.Insert_earnings("earnings", earningsFields, connection);
 
+                earningsFields.put("employee_id", String.valueOf(employeeId));
+                earningsFields.put("earning_type_id", "3");
+                earningsFields.put("period_id", String.valueOf(periodId));
+                earningsFields.put("earnings_amount", String.valueOf(mortgageAllowance));
+                earnings.Insert_earnings("earnings", earningsFields, connection);
 
-            earningsFields.put("employee_id", String.valueOf(employeeId));
-            earningsFields.put("earning_type_id", "2");
-            earningsFields.put("period_id", String.valueOf(periodId));
-            earningsFields.put("earnings_amount", String.valueOf(transportAllowance));
-            earnings.Insert_earnings("earnings", earningsFields, connection);
-
-            earningsFields.put("employee_id", String.valueOf(employeeId));
-            earningsFields.put("earning_type_id", "3");
-            earningsFields.put("period_id", String.valueOf(periodId));
-            earningsFields.put("earnings_amount", String.valueOf(mortgageAllowance));
-            earnings.Insert_earnings("earnings", earningsFields, connection);
-
-
+            }
 
         }
         // Insert deductions for all except terminated employees
@@ -244,6 +242,9 @@ public class rollover {
         }
     }
 
+
+
+
     private static boolean allowanceChecker(String startDate, String currentPeriod) {
 
         LocalDate start = LocalDate.parse(startDate);
@@ -262,7 +263,7 @@ public class rollover {
             JSONObject latestEarning = results.getJSONObject(0);
             return latestEarning.getDouble("earnings_amount");
         } else {
-            throw new SQLException("Salary for employee ID " + employeeId + " not found.");
+            throw new SQLException("Salary for employee ID " + employeeId + " not been initialized.");
         }
     }
 
